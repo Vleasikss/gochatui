@@ -39,7 +39,7 @@ const Chat = () => {
     const [messages, setMessages] = useState([])
     const [loading, setLoading] = useState(true)
 
-    const socket = useWebSocket("ws://localhost/api/ws", {
+    const socket = useWebSocket("ws://192.168.206.159/api/ws", {
         onOpen: () => console.log('WebSocket connection opened.'),
         onClose: () => console.log('WebSocket connection closed.'),
         shouldReconnect: (closeEvent) => true,
@@ -57,7 +57,7 @@ const Chat = () => {
 
     useEffect(() => {
         const xmlHttp = new XMLHttpRequest();
-        xmlHttp.open("GET", "http://localhost/api/history", false); // false for synchronous request
+        xmlHttp.open("GET", "http://192.168.206.159/api/history", false); // false for synchronous request
         xmlHttp.send(null);
         const response = JSON.parse(xmlHttp.responseText)
         setMessages(response.data)
