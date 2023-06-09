@@ -7,19 +7,15 @@ import {
     Paper,
     Button
 } from '@material-ui/core';
-import {postLogin} from "../service/api_service";
-import {setCredentials} from "../service/token_storage";
+import {postLogin, postRegister} from "../service/api_service";
 import {useNavigate} from "react-router-dom";
 
 
-const LoginPage = () => {
-    const [checked, setChecked] = useState(true);
+const SignupPage = () => {
     const [data, setData] = useState({username: "", password: ""})
-    const navigate = useNavigate();
+    const [hasError, setError] = useState(false)
+    const navigate = useNavigate()
 
-    const handleChange = (event) => {
-        setChecked(event.target.checked);
-    };
     const handleUsername = event => {
         setData({...data, username: event.target.value})
     }
@@ -27,11 +23,16 @@ const LoginPage = () => {
         setData({...data, password: event.target.value})
     }
     const handleSubmit = () => {
-        postLogin(
+        postRegister(
             {username: data.username, password: data.password},
             (data) => {
-                setCredentials(data.token, data.username)
-                navigate("/home")
+                if (!data.message) {
+                    setError(true)
+                }
+                if (data.message === "registration success") {
+                    setError(false)
+                    navigate("/login")
+                }
             }
         )
             .catch(s => console.log(s))
@@ -47,6 +48,8 @@ const LoginPage = () => {
                     justify={'center'}
                     alignItems={'center'}
                 >
+                    {hasError && <h3>Invalid Login or Password</h3>}
+
                     <Grid item xs={12}>
                         <TextField label="Username" value={data.username} onChange={handleUsername}></TextField>
                     </Grid>
@@ -55,20 +58,7 @@ const LoginPage = () => {
                                    onChange={handlePassword}></TextField>
                     </Grid>
                     <Grid item xs={12}>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={checked}
-                                    onChange={handleChange}
-                                    label={'Keep me logged in'}
-                                    inputProps={{'aria-label': 'primary checkbox'}}
-                                />
-                            }
-                            label="Keep me logged in"
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Button fullWidth onClick={handleSubmit}> Login </Button>
+                        <Button fullWidth onClick={handleSubmit}> Sign up </Button>
                     </Grid>
                 </Grid>
             </Paper>
@@ -76,4 +66,4 @@ const LoginPage = () => {
     );
 };
 
-export default LoginPage;
+export default SignupPage;

@@ -12,9 +12,13 @@ import ListItemText from '@material-ui/core/ListItemText';
 import Avatar from '@material-ui/core/Avatar';
 import ChatComponent from "./component/ChatComponent";
 import useWebSocket from "react-use-websocket";
-import {BrowserRouter as Router, Routes, Route}
+import {BrowserRouter as Router, Routes, Route, useNavigate}
     from 'react-router-dom';
 import LoginPage from "./pages/LoginPage";
+import {fetchChatHistory, fetchAllUsers, WEBSOCKET_HOST} from "./service/api_service";
+import SignupPage from "./pages/SignupPage";
+import {clearCredentials, getUsername, hasToken} from "./service/token_storage";
+import {Button} from "@material-ui/core";
 
 const useStyles = makeStyles({
     table: {
@@ -41,8 +45,10 @@ function Home() {
 
     const [messages, setMessages] = useState([])
     const [loading, setLoading] = useState(true)
-    const host = process.env.REACT_APP_HOST_IP_ADDRESS
-    const socket = useWebSocket(`ws://${host}/api/ws`, {
+    const [users, setUsers] = useState([])
+    const navigate = useNavigate()
+
+    const socket = useWebSocket(WEBSOCKET_HOST, {
         onOpen: () => console.log('WebSocket connection opened.'),
         onClose: () => console.log('WebSocket connection closed.'),
         shouldReconnect: (closeEvent) => true,
@@ -56,13 +62,19 @@ function Home() {
     const onSendingMessage = (data) => {
         socket.sendMessage(JSON.stringify(data))
     }
+    const handleSignOut = () => {
+        clearCredentials()
+        navigate("/login")
+    }
 
     useEffect(() => {
-        const xmlHttp = new XMLHttpRequest();
-        xmlHttp.open("GET", `http://${host}/api/history`, false); // false for synchronous request
-        xmlHttp.send(null);
-        const response = JSON.parse(xmlHttp.responseText)
-        setMessages(response.data)
+        if (!hasToken()) {
+            return navigate("/login")
+        }
+        const history = fetchChatHistory()
+        setMessages(history)
+        const users = fetchAllUsers()
+        setUsers(users)
         setLoading(false)
     }, [])
 
@@ -70,52 +82,47 @@ function Home() {
         return <>LOADING...</>
     }
 
+    const getUsers = () => {
+        return users.map(u => (<ListItem button key="RemySharp">
+                    <ListItemIcon>
+                        <Avatar alt={u.username} src="https://material-ui.com/static/images/avatar/1.jpg"/>
+                    </ListItemIcon>
+                    <ListItemText primary={u.username}>Remy Sharp</ListItemText>
+                    <ListItemText secondary="online" align="right"></ListItemText>
+                </ListItem>
+            )
+        )
+    }
+
     return (<div>
-        <Grid container>
-            <Grid item xs={12}>
-                <Typography variant="h5" className="header-message">Chat</Typography>
-            </Grid>
-        </Grid>
-        <Grid container component={Paper} className={classes.chatSection}>
-            <Grid item xs={3} className={classes.borderRight500}>
-                <List>
-                    <ListItem button key="RemySharp">
-                        <ListItemIcon>
-                            <Avatar alt="Remy Sharp" src="https://material-ui.com/static/images/avatar/1.jpg"/>
-                        </ListItemIcon>
-                        <ListItemText primary="John Wick"></ListItemText>
-                    </ListItem>
-                </List>
-                <Divider/>
-                <Grid item xs={12} style={{padding: '10px'}}>
-                    <TextField id="outlined-basic-email" label="Search" variant="outlined" fullWidth/>
+            <Button onClick={handleSignOut}>Sign out</Button>
+            <Grid container>
+                <Grid item xs={12}>
+                    <Typography variant="h5" className="header-message">Chat</Typography>
                 </Grid>
-                <Divider/>
-                <List>
-                    <ListItem button key="RemySharp">
-                        <ListItemIcon>
-                            <Avatar alt="Remy Sharp" src="https://material-ui.com/static/images/avatar/1.jpg"/>
-                        </ListItemIcon>
-                        <ListItemText primary="Remy Sharp">Remy Sharp</ListItemText>
-                        <ListItemText secondary="online" align="right"></ListItemText>
-                    </ListItem>
-                    <ListItem button key="Alice">
-                        <ListItemIcon>
-                            <Avatar alt="Alice" src="https://material-ui.com/static/images/avatar/3.jpg"/>
-                        </ListItemIcon>
-                        <ListItemText primary="Alice">Alice</ListItemText>
-                    </ListItem>
-                    <ListItem button key="CindyBaker">
-                        <ListItemIcon>
-                            <Avatar alt="Cindy Baker" src="https://material-ui.com/static/images/avatar/2.jpg"/>
-                        </ListItemIcon>
-                        <ListItemText primary="Cindy Baker">Cindy Baker</ListItemText>
-                    </ListItem>
-                </List>
             </Grid>
-            <ChatComponent messages={messages} sendMessageHandler={onSendingMessage}/>
-        </Grid>
-    </div>
+            <Grid container component={Paper} className={classes.chatSection}>
+                <Grid item xs={3} className={classes.borderRight500}>
+                    <List>
+                        <ListItem button key="RemySharp">
+                            <ListItemIcon>
+                                <Avatar alt="Remy Sharp" src="https://material-ui.com/static/images/avatar/1.jpg"/>
+                            </ListItemIcon>
+                            <ListItemText primary={getUsername()}></ListItemText>
+                        </ListItem>
+                    </List>
+                    <Divider/>
+                    <Grid item xs={12} style={{padding: '10px'}}>
+                        <TextField id="outlined-basic-email" label="Search" variant="outlined" fullWidth/>
+                    </Grid>
+                    <Divider/>
+                    <List>
+                        {getUsers()}
+                    </List>
+                </Grid>
+                <ChatComponent messages={messages} sendMessageHandler={onSendingMessage}/>
+            </Grid>
+        </div>
     )
 }
 
@@ -125,6 +132,7 @@ const Chat = () => {
             <Routes>
                 <Route path='/home' exact element={<Home/>}/>
                 <Route path='/login' exact element={<LoginPage/>}/>
+                <Route path='/signup' exact element={<SignupPage/>}/>
                 {/*<Route path='/about' element={<About/>}/>*/}
                 {/*<Route path='/contact' element={<Contact/>}/>*/}
                 {/*<Route path='/blogs' element={<Blogs/>}/>*/}
