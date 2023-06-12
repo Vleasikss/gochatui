@@ -4,9 +4,18 @@ const host = process.env.REACT_APP_HOST_IP_ADDRESS || "localhost"
 
 const apiHost = `http://${host}/api`
 
-export const fetchChatHistory = () => {
+export const fetchChatHistory = (chatId) => {
     const xmlHttp = new XMLHttpRequest();
-    xmlHttp.open("GET", `${apiHost}/history`, false); // false for synchronous request
+    xmlHttp.open("GET", `${apiHost}/history/${chatId}`, false); // false for synchronous request
+    xmlHttp.setRequestHeader("Authorization", "Bearer " + getToken())
+    xmlHttp.send(null);
+    const response = JSON.parse(xmlHttp.responseText)
+    return response.data
+}
+
+export const fetchAllUserChats = () => {
+    const xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", `${apiHost}/chat`, false); // false for synchronous request
     xmlHttp.setRequestHeader("Authorization", "Bearer " + getToken())
     xmlHttp.send(null);
     const response = JSON.parse(xmlHttp.responseText)
@@ -42,6 +51,26 @@ export const postLogin = (user, callback) => {
 export const postRegister = (user, callback) => {
     const userJson = JSON.stringify(user)
     return fetch(`${apiHost}/register`, {method: "POST", body: userJson})
+        .then(response => response.json())
+        .then(response => callback(response))
+        .catch(s => console.log(s))
+}
+
+/**
+ *
+ * @param chatInfo {{name: string, participants: [string]}}
+ * @param callback
+ * @return {Promise<* | void>}
+ */
+export const postNewChat = (chatInfo, callback) => {
+    const info = JSON.stringify(chatInfo)
+    return fetch(`${apiHost}/chat`, {
+        method: "POST",
+        body: info,
+        headers: {
+            "Authorization": "Bearer " + getToken()
+        }
+    })
         .then(response => response.json())
         .then(response => callback(response))
         .catch(s => console.log(s))

@@ -1,15 +1,10 @@
 import React, {useState} from 'react';
-import {
-    Checkbox,
-    Grid,
-    TextField,
-    FormControlLabel,
-    Paper,
-    Button
-} from '@material-ui/core';
+
 import {postLogin} from "../service/api_service";
 import {setCredentials} from "../service/token_storage";
 import {useNavigate} from "react-router-dom";
+import {Checkbox, FormControlLabel, Grid, Paper, TextField} from "@mui/material";
+import Button from "@mui/material/Button";
 
 
 const LoginPage = () => {

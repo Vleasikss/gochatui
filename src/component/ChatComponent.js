@@ -1,14 +1,8 @@
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import Grid from "@material-ui/core/Grid";
-import ListItemText from "@material-ui/core/ListItemText";
-import Divider from "@material-ui/core/Divider";
-import TextField from "@material-ui/core/TextField";
-import Fab from "@material-ui/core/Fab";
-import SendIcon from "@material-ui/icons/Send";
 import React, {useState} from "react";
-import {makeStyles} from "@material-ui/core/styles";
 import {getUsername} from "../service/token_storage";
+import {Divider, Fab, Grid, List, ListItem, ListItemText, TextField} from "@mui/material";
+import { makeStyles } from '@material-ui/core/styles';
+import SendIcon from '@mui/icons-material/Send';
 
 const useStyles = makeStyles({
     table: {
