@@ -27,7 +27,7 @@ export default function MultiSelect(props) {
                 )}
             >
                 {props.data.map((name) => (
-                    <MenuItem key={name.key} value={name.value}>
+                    <MenuItem key={name.key} value={name.key}>
                         {name.value}
                     </MenuItem>
                 ))}

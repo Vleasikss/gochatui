@@ -39,13 +39,21 @@ export const fetchAllUsers = () => {
  */
 export const postLogin = (user, callback) => {
     const userJson = JSON.stringify(user)
-    console.log(userJson)
     return fetch(`${apiHost}/login`, {
         method: "POST",
         body: userJson,
     })
         .then(response => response.json())
         .then(response => callback(response))
+}
+
+export const deleteChatById = (chatId, callback) => {
+    const userJson = JSON.stringify({chatId})
+    return fetch(`${apiHost}/chat/${userJson}`, {
+        method: "DELETE",
+        body: userJson,
+        headers: {"Authorization": "Bearer " + getToken()}
+    })
 }
 
 export const postRegister = (user, callback) => {

@@ -10,6 +10,7 @@ import TextField from '@mui/material/TextField';
 import {fetchAllUsers, postNewChat} from "../service/api_service";
 import {useEffect} from "react";
 import MultiSelect from "./MultiSelect";
+import {getUsername} from "../service/token_storage";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props}/>;
@@ -21,8 +22,7 @@ export default function NewChatComponent(props) {
     const [users, setUsers] = React.useState([])
     const [selectedUsers, setSelectedUsers] = React.useState([])
     const [payload, setPayload] = React.useState({
-        name: "",
-        participant: ""
+        name: ""
     })
 
     const handleClickOpen = () => {
@@ -31,7 +31,10 @@ export default function NewChatComponent(props) {
 
     useEffect(() => {
         const users = fetchAllUsers() || []
-        const mapped = users.map(u => ({key: u.username, value: u.username}))
+        const mapped = users
+            .filter(u => u.username !== getUsername())
+            .map(u => ({key: u.username, value: u.username}))
+
         console.log(mapped)
         setUsers(mapped)
         setLoading(false)
@@ -43,13 +46,10 @@ export default function NewChatComponent(props) {
         }
         if (actionType === "APPEND") {
             return () => {
-                postNewChat(payload, (result) => {
-                    props.onNewChatCreated({...payload, chatId: result.chatId})
-                    console.log(result)
+                postNewChat({...payload, participants: selectedUsers}, (result) => {
+                    props.onNewChatCreated({...payload, participants: selectedUsers, chatId: result.chatId})
                     setOpen(false)
-
                 })
-
             }
         }
     }

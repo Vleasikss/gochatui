@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {useLocation, useNavigate, useParams} from "react-router-dom";
 import useWebSocket from "react-use-websocket";
-import {fetchAllUserChats, fetchChatHistory, WEBSOCKET_HOST} from "../service/api_service";
+import {deleteChatById, fetchAllUserChats, fetchChatHistory, WEBSOCKET_HOST} from "../service/api_service";
 import {clearCredentials, getUsername, hasToken} from "../service/token_storage";
 import ChatComponent from "../component/ChatComponent";
 import NewChatComponent from "../component/NewChatComponent";
@@ -16,7 +16,7 @@ import {
     Paper, TextField,
     Typography
 } from "@mui/material";
-import { makeStyles } from '@material-ui/core/styles';
+import {makeStyles} from '@material-ui/core/styles';
 import Button from "@mui/material/Button";
 
 const useStyles = makeStyles({
@@ -44,7 +44,7 @@ export default function Home(props) {
     const classes = useStyles();
 
     const {chatId} = useParams()
-    const [chatIdState, setChatIdState]= useState(chatId)
+    const [chatIdState, setChatIdState] = useState(chatId)
 
     const [messages, setMessages] = useState([])
     const [loading, setLoading] = useState(true)
@@ -78,7 +78,12 @@ export default function Home(props) {
             }
             setMessages(history)
             setChatIdState(newChatId)
-            window.history.replaceState(null, "New Page Title", `/home/${chatIdState}`)
+            window.history.replaceState(null, "Home Page", `/home/${chatIdState}`)
+        }
+    }
+    const handleDeleteChatClick = (chatId) => {
+        return () => {
+            deleteChatById(chatId).then(() => setChats(chats.filter(s => s.chatId !== chatId)))
         }
     }
 
@@ -105,12 +110,19 @@ export default function Home(props) {
 
     const getChats = () => {
 
+        const deleteButton = (chat) => {
+            if (chat.assignedTo === getUsername()) {
+                return <Button onClick={handleDeleteChatClick(chat.chatId)}>Delete</Button>
+            }
+        }
+
         return <>
             <NewChatComponent onNewChatCreated={addNewChat}/>
             {chats.map(u => (<ListItem button key={u.name} onClick={handleChatClick(u.chatId)}>
                         <ListItemIcon>
                             <Avatar alt={u.name} src="https://material-ui.com/static/images/avatar/1.jpg"/>
                         </ListItemIcon>
+                        {deleteButton(u)}
                         <ListItemText primary={u.name}>{u.name}</ListItemText>
                         <ListItemText secondary="online" align="right"></ListItemText>
                     </ListItem>
