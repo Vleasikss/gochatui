@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {useLocation, useNavigate, useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import useWebSocket from "react-use-websocket";
 import {deleteChatById, fetchAllUserChats, fetchChatHistory, WEBSOCKET_HOST} from "../service/api_service";
 import {clearCredentials, getUsername, hasToken} from "../service/token_storage";
@@ -18,6 +18,10 @@ import {
 } from "@mui/material";
 import {makeStyles} from '@material-ui/core/styles';
 import Button from "@mui/material/Button";
+import {showInfoMessage} from "../service/notification_service";
+import {ToastContainer} from "react-toastify";
+import useSound from 'use-sound';
+import notificationSound from '../sounds/toast_sound.mp3';
 
 const useStyles = makeStyles({
     table: {
@@ -44,6 +48,8 @@ export default function Home(props) {
     const classes = useStyles();
 
     const {chatId} = useParams()
+    const [sound] = useSound(notificationSound)
+
     const [chatIdState, setChatIdState] = useState(chatId)
 
     const [messages, setMessages] = useState([])
@@ -56,7 +62,15 @@ export default function Home(props) {
         onClose: () => console.log('WebSocket connection closed.'),
         shouldReconnect: (closeEvent) => true,
         onMessage: (event) => {
-            setMessages([...messages, JSON.parse(event.data)])
+            const message = JSON.parse(event.data)
+            const thisUserName = getUsername()
+            setMessages([...messages, message])
+            if (thisUserName === message.from) {
+                return
+            }
+            const notificationMessage = `${message.chatName} - ${message.from}: ${message.payload}`
+            showInfoMessage(notificationMessage, sound)
+
         }
     });
 
@@ -117,6 +131,18 @@ export default function Home(props) {
         }
 
         return <>
+            <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+            />
             <NewChatComponent onNewChatCreated={addNewChat}/>
             {chats.map(u => (<ListItem button key={u.name} onClick={() => handleChatClick(u.chatId)}>
                         <ListItemIcon>
