@@ -83,5 +83,3 @@ export const postNewChat = (chatInfo, callback) => {
         .then(response => callback(response))
         .catch(s => console.log(s))
 }
-
-export const WEBSOCKET_HOST = `ws://${host}/api/ws`

@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
-import useWebSocket from "react-use-websocket";
-import {deleteChatById, fetchAllUserChats, fetchChatHistory, WEBSOCKET_HOST} from "../service/api_service";
+import {deleteChatById, fetchAllUserChats, fetchChatHistory} from "../service/api_service";
 import {clearCredentials, getUsername, hasToken} from "../service/token_storage";
 import ChatComponent from "../component/ChatComponent";
 import NewChatComponent from "../component/NewChatComponent";
@@ -13,15 +12,17 @@ import {
     ListItem,
     ListItemIcon,
     ListItemText,
-    Paper, TextField,
+    Paper,
+    TextField,
     Typography
 } from "@mui/material";
 import {makeStyles} from '@material-ui/core/styles';
 import Button from "@mui/material/Button";
-import {showInfoMessage} from "../service/notification_service";
 import {ToastContainer} from "react-toastify";
 import useSound from 'use-sound';
 import notificationSound from '../sounds/toast_sound.mp3';
+import {NewMessageHandler, useMessagesSocket} from "../service/websocket_service";
+import {CHAT_PAGE, LOGIN_PAGE} from "../pages";
 
 const useStyles = makeStyles({
     table: {
@@ -57,31 +58,28 @@ export default function Home(props) {
     const [chats, setChats] = useState([])
     const navigate = useNavigate()
 
-    const socket = useWebSocket(WEBSOCKET_HOST, {
-        onOpen: () => console.log('WebSocket connection opened.'),
-        onClose: () => console.log('WebSocket connection closed.'),
-        shouldReconnect: (closeEvent) => true,
-        onMessage: (event) => {
-            const message = JSON.parse(event.data)
-            const thisUserName = getUsername()
-            setMessages([...messages, message])
-            if (thisUserName === message.from) {
-                return
-            }
-            const notificationMessage = `${message.chatName} - ${message.from}: ${message.payload}`
-            showInfoMessage(notificationMessage, sound)
+    const messagesSocket = useMessagesSocket(NewMessageHandler(setMessages, messages, chats, chatId, sound))
 
+    useEffect(() => {
+        if (!hasToken()) {
+            return navigate(LOGIN_PAGE)
         }
-    });
+
+        const history = fetchChatHistory(chatId)
+        setMessages(history || [])
+        const chats = fetchAllUserChats()
+        setChats(chats || [])
+        setLoading(false)
+    }, [navigate, chatId])
 
     const onSendingMessage = (data) => {
         const result = {...data, chatId: chatIdState}
-        socket.sendMessage(JSON.stringify(result))
+        messagesSocket.sendMessage(JSON.stringify(result))
     }
 
     const handleSignOut = () => {
         clearCredentials()
-        navigate("/login")
+        navigate(LOGIN_PAGE)
     }
 
     const handleChatClick = (newChatId) => {
@@ -92,7 +90,7 @@ export default function Home(props) {
             setMessages(history)
         }
         setChatIdState(newChatId)
-        window.history.replaceState(null, "Home Page", `/home/${newChatId}`)
+        window.history.replaceState(null, "Chat", CHAT_PAGE.replace(':chatId', newChatId))
     }
 
     const handleDeleteChatClick = (chatId) => {
@@ -106,24 +104,7 @@ export default function Home(props) {
         handleChatClick(payload.chatId)
     }
 
-    useEffect(() => {
-        if (!hasToken()) {
-            return navigate("/login")
-        }
-
-        const history = fetchChatHistory(chatId)
-        setMessages(history || [])
-        const chats = fetchAllUserChats()
-        setChats(chats || [])
-        setLoading(false)
-    }, [navigate, chatId])
-
-    if (loading) {
-        return <>LOADING...</>
-    }
-
     const getChats = () => {
-
         const deleteButton = (chat) => {
             if (chat.assignedTo === getUsername()) {
                 return <Button onClick={handleDeleteChatClick(chat.chatId)}>Delete</Button>
@@ -157,6 +138,12 @@ export default function Home(props) {
         </>
     }
 
+
+    if (loading) {
+        return <>LOADING...</>
+    }
+
+
     return (<div>
             <Button onClick={handleSignOut}>Sign out</Button>
             <Grid container>
@@ -183,7 +170,7 @@ export default function Home(props) {
                         {getChats()}
                     </List>
                 </Grid>
-                <ChatComponent messages={messages} sendMessageHandler={onSendingMessage}/>
+                <ChatComponent disabled={!chatIdState} messages={messages} sendMessageHandler={onSendingMessage}/>
             </Grid>
         </div>
     )

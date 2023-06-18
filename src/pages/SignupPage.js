@@ -4,6 +4,7 @@ import {postRegister} from "../service/api_service";
 import {useNavigate} from "react-router-dom";
 import {Grid, Paper, TextField} from "@mui/material";
 import Button from "@mui/material/Button";
+import {LOGIN_PAGE} from "../pages";
 
 
 const SignupPage = () => {
@@ -26,7 +27,7 @@ const SignupPage = () => {
                 }
                 if (data.message === "registration success") {
                     setError(false)
-                    navigate("/login")
+                    navigate(LOGIN_PAGE)
                 }
             }
         )

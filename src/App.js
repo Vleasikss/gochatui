@@ -7,6 +7,7 @@ import {ThemeProvider} from "@mui/styles";
 import {createTheme} from "@mui/material";
 import './App.css'
 import {injectStyle} from "react-toastify/inject-style";
+import {CHAT_PAGE, HOME_PAGE, LOGIN_PAGE, SIGNUP_PAGE} from "./pages";
 
 const theme = createTheme();
 
@@ -20,10 +21,10 @@ const Chat = () => {
         <ThemeProvider theme={theme}>
             <Router>
                 <Routes>
-                    <Route path='/home/:chatId' exact element={<Home/>}/>
-                    <Route path='/home/' exact element={<Home/>}/>
-                    <Route path='/login' exact element={<LoginPage/>}/>
-                    <Route path='/signup' exact element={<SignupPage/>}/>
+                    <Route path={CHAT_PAGE} exact element={<Home/>}/>
+                    <Route path={HOME_PAGE} exact element={<Home/>}/>
+                    <Route path={LOGIN_PAGE} exact element={<LoginPage/>}/>
+                    <Route path={SIGNUP_PAGE} exact element={<SignupPage/>}/>
                 </Routes>
             </Router>
         </ThemeProvider>

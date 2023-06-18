@@ -63,7 +63,13 @@ const ChatComponent = (props) => {
         <Divider/>
         <Grid container style={{padding: '20px'}}>
             <Grid item xs={11}>
-                <TextField id="outlined-basic-email" value={message} onChange={onTextFieldUpdate} label="Type Something" fullWidth/>
+                <TextField disabled={props.disabled}
+                           id="outlined-basic-email"
+                           value={message}
+                           onChange={onTextFieldUpdate}
+                           label={props.disabled ? "Select a chat to continue" : "Type something"}
+                           fullWidth
+                />
             </Grid>
             <Grid xs={1} align="right">
                 <Fab color="primary" aria-label="add" onClick={sendMessage}><SendIcon/></Fab>
