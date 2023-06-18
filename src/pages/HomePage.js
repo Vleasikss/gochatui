@@ -71,16 +71,16 @@ export default function Home(props) {
     }
 
     const handleChatClick = (newChatId) => {
-        return () => {
-            const history = fetchChatHistory(newChatId)
-            if (!history) {
-                return setMessages([])
-            }
+        const history = fetchChatHistory(newChatId)
+        if (!history) {
+            setMessages([])
+        } else {
             setMessages(history)
-            setChatIdState(newChatId)
-            window.history.replaceState(null, "Home Page", `/home/${chatIdState}`)
         }
+        setChatIdState(newChatId)
+        window.history.replaceState(null, "Home Page", `/home/${newChatId}`)
     }
+
     const handleDeleteChatClick = (chatId) => {
         return () => {
             deleteChatById(chatId).then(() => setChats(chats.filter(s => s.chatId !== chatId)))
@@ -118,7 +118,7 @@ export default function Home(props) {
 
         return <>
             <NewChatComponent onNewChatCreated={addNewChat}/>
-            {chats.map(u => (<ListItem button key={u.name} onClick={handleChatClick(u.chatId)}>
+            {chats.map(u => (<ListItem button key={u.name} onClick={() => handleChatClick(u.chatId)}>
                         <ListItemIcon>
                             <Avatar alt={u.name} src="https://material-ui.com/static/images/avatar/1.jpg"/>
                         </ListItemIcon>
