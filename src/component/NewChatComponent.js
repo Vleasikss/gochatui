@@ -35,7 +35,6 @@ export default function NewChatComponent(props) {
             .filter(u => u.username !== getUsername())
             .map(u => ({key: u.username, value: u.username}))
 
-        console.log(mapped)
         setUsers(mapped)
         setLoading(false)
     }, [])
@@ -46,10 +45,15 @@ export default function NewChatComponent(props) {
         }
         if (actionType === "APPEND") {
             return () => {
-                postNewChat({...payload, participants: selectedUsers}, (result) => {
-                    props.onNewChatCreated({...payload, participants: selectedUsers, chatId: result.chatId})
+                return postNewChat({...payload, participants: selectedUsers}, (result) => {
                     setOpen(false)
-                })
+                    return result
+                }).then((result) => props.onNewChatCreated({
+                    ...payload,
+                    participants: [...selectedUsers, getUsername()],
+                    chatId: result.chatId,
+                    assignedTo: getUsername()
+                }))
             }
         }
     }

@@ -21,7 +21,13 @@ import Button from "@mui/material/Button";
 import {ToastContainer} from "react-toastify";
 import useSound from 'use-sound';
 import notificationSound from '../sounds/toast_sound.mp3';
-import {NewMessageHandler, useMessagesSocket} from "../service/websocket_service";
+import successSound from "../sounds/short_success.mp3";
+import {
+    CHAT_CREATED_EVENT_TYPE, CHAT_DELETED_EVENT_TYPE, DeleteChatHandler, MESSAGE_CREATED_EVENT_TYPE,
+    NewChatHandler,
+    NewMessageHandler,
+    useMessagesSocket
+} from "../service/websocket_service";
 import {CHAT_PAGE, LOGIN_PAGE} from "../pages";
 
 const useStyles = makeStyles({
@@ -49,7 +55,8 @@ export default function Home(props) {
     const classes = useStyles();
 
     const {chatId} = useParams()
-    const [sound] = useSound(notificationSound)
+    const [soundInfo] = useSound(notificationSound)
+    const [soundSuccess] = useSound(successSound)
 
     const [chatIdState, setChatIdState] = useState(chatId)
 
@@ -58,7 +65,25 @@ export default function Home(props) {
     const [chats, setChats] = useState([])
     const navigate = useNavigate()
 
-    const messagesSocket = useMessagesSocket(NewMessageHandler(setMessages, messages, chats, chatId, sound))
+    const messagesSocket = useMessagesSocket((payload) => {
+
+        if (payload.eventType === CHAT_CREATED_EVENT_TYPE) {
+            // todo doesn't work properly
+            console.log(payload.message)
+            const maybeNewChat = NewChatHandler(setChatIdState, setMessages, setChats, chats, soundInfo)(payload.message)
+            maybeNewChat && setChats([...chats, maybeNewChat])
+        }
+        if (payload.eventType === MESSAGE_CREATED_EVENT_TYPE) {
+            return NewMessageHandler(setMessages, messages, chats, chatId, soundInfo)(payload.message)
+        }
+        if (payload.eventType === CHAT_DELETED_EVENT_TYPE) {
+            console.log(payload.message)
+            // todo doesn't work properly
+            const maybeDeletedChat = DeleteChatHandler(setChats, chats, soundSuccess)(payload.message)
+            maybeDeletedChat && setChats(chats.filter(ch => ch.chatId !== maybeDeletedChat.chatId))
+        }
+    })
+
 
     useEffect(() => {
         if (!hasToken()) {
@@ -70,10 +95,13 @@ export default function Home(props) {
         const chats = fetchAllUserChats()
         setChats(chats || [])
         setLoading(false)
-    }, [navigate, chatId])
+    }, [])
 
     const onSendingMessage = (data) => {
-        const result = {...data, chatId: chatIdState}
+        const result = {
+            eventType: MESSAGE_CREATED_EVENT_TYPE,
+            message: {...data, chatId: chatIdState}
+        }
         messagesSocket.sendMessage(JSON.stringify(result))
     }
 
@@ -91,17 +119,35 @@ export default function Home(props) {
         }
         setChatIdState(newChatId)
         window.history.replaceState(null, "Chat", CHAT_PAGE.replace(':chatId', newChatId))
+        return true
     }
 
     const handleDeleteChatClick = (chatId) => {
         return () => {
-            deleteChatById(chatId).then(() => setChats(chats.filter(s => s.chatId !== chatId)))
+            deleteChatById(chatId)
+                .then(() => {
+                    const payload = {
+                        eventType: CHAT_DELETED_EVENT_TYPE,
+                        message: {chatId: chatId}
+                    }
+                    console.log(JSON.stringify(payload))
+                    messagesSocket.sendMessage(JSON.stringify(payload))
+                })
         }
     }
 
     const addNewChat = (payload) => {
-        setChats([...chats, payload])
-        handleChatClick(payload.chatId)
+        messagesSocket.sendMessage(JSON.stringify({
+            eventType: CHAT_CREATED_EVENT_TYPE,
+            message: {
+                chatId: payload.chatId,
+                name: payload.name,
+                assignedTo: payload.assignedTo,
+                participants: payload.participants
+            }
+        }))
+
+        return handleChatClick(payload.chatId)
     }
 
     const getChats = () => {
@@ -112,20 +158,8 @@ export default function Home(props) {
         }
 
         return <>
-            <ToastContainer
-                position="bottom-right"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-                theme="colored"
-            />
             <NewChatComponent onNewChatCreated={addNewChat}/>
-            {chats.map(u => (<ListItem button key={u.name} onClick={() => handleChatClick(u.chatId)}>
+            {chats.map(u => (<ListItem button key={u.chatId} onClick={() => handleChatClick(u.chatId)}>
                         <ListItemIcon>
                             <Avatar alt={u.name} src="https://material-ui.com/static/images/avatar/1.jpg"/>
                         </ListItemIcon>
