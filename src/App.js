@@ -36,7 +36,7 @@ const Chat = () => {
                 <Routes>
                     <Route path={CHAT_PAGE} exact element={<Home/>}/>
                     <Route path={HOME_PAGE} exact element={<Home/>}/>
-                    <Route path={LOGIN_PAGE} exact element={<LoginPage/>}/>
+                1    <Route path={LOGIN_PAGE} exact element={<LoginPage/>}/>
                     <Route path={SIGNUP_PAGE} exact element={<SignupPage/>}/>
                 </Routes>
             </Router>

@@ -5,6 +5,7 @@ import {setCredentials} from "../service/token_storage";
 import {useNavigate} from "react-router-dom";
 import {Checkbox, FormControlLabel, Grid, Paper, TextField} from "@mui/material";
 import Button from "@mui/material/Button";
+import {HOME_PAGE} from "../pages";
 
 
 const LoginPage = () => {
@@ -26,7 +27,7 @@ const LoginPage = () => {
             {username: data.username, password: data.password},
             (data) => {
                 setCredentials(data.token, data.username)
-                navigate("/home")
+                navigate(HOME_PAGE)
             }
         )
             .catch(s => console.log(s))

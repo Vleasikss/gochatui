@@ -18,17 +18,20 @@ import {
 } from "@mui/material";
 import {makeStyles} from '@material-ui/core/styles';
 import Button from "@mui/material/Button";
-import {ToastContainer} from "react-toastify";
 import useSound from 'use-sound';
-import notificationSound from '../sounds/toast_sound.mp3';
-import successSound from "../sounds/short_success.mp3";
+
 import {
-    CHAT_CREATED_EVENT_TYPE, CHAT_DELETED_EVENT_TYPE, DeleteChatHandler, MESSAGE_CREATED_EVENT_TYPE,
+    CHAT_CREATED_EVENT_TYPE,
+    CHAT_DELETED_EVENT_TYPE,
+    DeleteChatHandler,
+    MESSAGE_CREATED_EVENT_TYPE,
     NewChatHandler,
     NewMessageHandler,
     useMessagesSocket
 } from "../service/websocket_service";
-import {CHAT_PAGE, LOGIN_PAGE} from "../pages";
+import {CHAT_PAGE, HOME_PAGE, LOGIN_PAGE} from "../pages";
+import {Sounds} from "../sounds/sounds";
+import {forward} from "../service/page_navigation";
 
 const useStyles = makeStyles({
     table: {
@@ -55,8 +58,8 @@ export default function Home(props) {
     const classes = useStyles();
 
     const {chatId} = useParams()
-    const [soundInfo] = useSound(notificationSound)
-    const [soundSuccess] = useSound(successSound)
+    const [soundInfo] = useSound(Sounds.NOTIFICATION)
+    const [soundSuccess] = useSound(Sounds.SUCCESS)
 
     const [chatIdState, setChatIdState] = useState(chatId)
 
@@ -66,20 +69,16 @@ export default function Home(props) {
     const navigate = useNavigate()
 
     const messagesSocket = useMessagesSocket((payload) => {
-
         if (payload.eventType === CHAT_CREATED_EVENT_TYPE) {
-            // todo doesn't work properly
-            console.log(payload.message)
-            const maybeNewChat = NewChatHandler(setChatIdState, setMessages, setChats, chats, soundInfo)(payload.message)
+            const maybeNewChat = NewChatHandler(soundInfo)(payload.message)
             maybeNewChat && setChats([...chats, maybeNewChat])
         }
-        if (payload.eventType === MESSAGE_CREATED_EVENT_TYPE) {
-            return NewMessageHandler(setMessages, messages, chats, chatId, soundInfo)(payload.message)
+        else if (payload.eventType === MESSAGE_CREATED_EVENT_TYPE) {
+            const maybeNewMessage = NewMessageHandler(soundInfo)(payload.message)
+            maybeNewMessage && setMessages([...messages, maybeNewMessage])
         }
-        if (payload.eventType === CHAT_DELETED_EVENT_TYPE) {
-            console.log(payload.message)
-            // todo doesn't work properly
-            const maybeDeletedChat = DeleteChatHandler(setChats, chats, soundSuccess)(payload.message)
+        else if (payload.eventType === CHAT_DELETED_EVENT_TYPE) {
+            const maybeDeletedChat = DeleteChatHandler(chats, soundSuccess)(payload.message)
             maybeDeletedChat && setChats(chats.filter(ch => ch.chatId !== maybeDeletedChat.chatId))
         }
     })
@@ -89,13 +88,18 @@ export default function Home(props) {
         if (!hasToken()) {
             return navigate(LOGIN_PAGE)
         }
-
         const history = fetchChatHistory(chatId)
         setMessages(history || [])
+    }, [chatId, navigate, chatIdState])
+
+    useEffect(() => {
+        if (!hasToken()) {
+            return navigate(LOGIN_PAGE)
+        }
         const chats = fetchAllUserChats()
         setChats(chats || [])
         setLoading(false)
-    }, [])
+    }, [navigate])
 
     const onSendingMessage = (data) => {
         const result = {
@@ -118,7 +122,7 @@ export default function Home(props) {
             setMessages(history)
         }
         setChatIdState(newChatId)
-        window.history.replaceState(null, "Chat", CHAT_PAGE.replace(':chatId', newChatId))
+        forward(CHAT_PAGE.replace(':chatId', newChatId))
         return true
     }
 
@@ -131,6 +135,8 @@ export default function Home(props) {
                         message: {chatId: chatId}
                     }
                     console.log(JSON.stringify(payload))
+                    setChatIdState(undefined)
+                    forward(HOME_PAGE)
                     messagesSocket.sendMessage(JSON.stringify(payload))
                 })
         }

@@ -1,8 +1,6 @@
 import useWebSocket from "react-use-websocket";
 import {getUsername} from "./token_storage";
 import {showDeleteMessage, showInfoMessage} from "./notification_service";
-import {fetchChatHistory} from "./api_service";
-import {CHAT_PAGE} from "../pages";
 
 const host = process.env.REACT_APP_HOST_IP_ADDRESS || "localhost"
 const WEBSOCKET_HOST = `ws://${host}/api/ws`
@@ -22,7 +20,7 @@ export const CHAT_DELETED_EVENT_TYPE = "CHAT_DELETED"
 export const MESSAGE_CREATED_EVENT_TYPE = "MESSAGE_CREATED"
 
 
-export const DeleteChatHandler = (setChats, chats, sound) => {
+export const DeleteChatHandler = (chats, sound) => {
     return chat => {
 
         const founded = chats.find(s => s.chatId === chat.chatId);
@@ -35,7 +33,7 @@ export const DeleteChatHandler = (setChats, chats, sound) => {
     }
 }
 
-export const NewChatHandler = (setChatIdState, setMessages, setChats, chats, sound) => {
+export const NewChatHandler = (sound) => {
     return chat => {
         const thisUserName = getUsername()
         const participant = chat.participants.includes(thisUserName)
@@ -49,17 +47,18 @@ export const NewChatHandler = (setChatIdState, setMessages, setChats, chats, sou
         return chat
     }
 }
+
 /**
  * TODO: Use redux to store messages, chats
  */
-export const NewMessageHandler = (setMessages, messages, chats, chatId, sound) => {
+export const NewMessageHandler = (sound) => {
     const thisUserName = getUsername()
     return (message) => {
-        setMessages([...messages, message])
         if (thisUserName === message.from) {
             return
         }
         const notificationMessage = `${message.chatName} - ${message.from}: ${message.payload}`
         showInfoMessage(notificationMessage, sound)
+        return message
     }
 }
