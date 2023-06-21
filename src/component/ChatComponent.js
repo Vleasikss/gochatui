@@ -1,13 +1,8 @@
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import Grid from "@material-ui/core/Grid";
-import ListItemText from "@material-ui/core/ListItemText";
-import Divider from "@material-ui/core/Divider";
-import TextField from "@material-ui/core/TextField";
-import Fab from "@material-ui/core/Fab";
-import SendIcon from "@material-ui/icons/Send";
 import React, {useState} from "react";
-import {makeStyles} from "@material-ui/core/styles";
+import {getUsername} from "../service/token_storage";
+import {Divider, Fab, Grid, List, ListItem, ListItemText, TextField} from "@mui/material";
+import { makeStyles } from '@material-ui/core/styles';
+import SendIcon from '@mui/icons-material/Send';
 
 const useStyles = makeStyles({
     table: {
@@ -53,7 +48,7 @@ const ChatComponent = (props) => {
     }
 
     const sendMessage = () => {
-        props.sendMessageHandler({payload: message, from: "Vlas"})
+        props.sendMessageHandler({payload: message, from: getUsername()})
         setMessage("")
     }
 
@@ -68,7 +63,13 @@ const ChatComponent = (props) => {
         <Divider/>
         <Grid container style={{padding: '20px'}}>
             <Grid item xs={11}>
-                <TextField id="outlined-basic-email" value={message} onChange={onTextFieldUpdate} label="Type Something" fullWidth/>
+                <TextField disabled={props.disabled}
+                           id="outlined-basic-email"
+                           value={message}
+                           onChange={onTextFieldUpdate}
+                           label={props.disabled ? "Select a chat to continue" : "Type something"}
+                           fullWidth
+                />
             </Grid>
             <Grid xs={1} align="right">
                 <Fab color="primary" aria-label="add" onClick={sendMessage}><SendIcon/></Fab>

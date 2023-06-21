@@ -5,6 +5,9 @@ COPY package-lock.json .
 COPY src src/
 COPY public public/
 COPY . .
+ARG REACT_APP_HOST_IP_ADDRESS
+
+ENV REACT_APP_HOST_IP_ADDRESS $REACT_APP_HOST_IP_ADDRESS
 RUN npm run build
 
 FROM nginx:latest
