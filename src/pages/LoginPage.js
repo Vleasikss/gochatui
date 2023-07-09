@@ -3,9 +3,9 @@ import React, {useState} from 'react';
 import {postLogin} from "../service/api_service";
 import {setCredentials} from "../service/token_storage";
 import {useNavigate} from "react-router-dom";
-import {Checkbox, FormControlLabel, Grid, Paper, TextField} from "@mui/material";
+import {Checkbox, FormControlLabel, Grid, Link, Paper, TextField} from "@mui/material";
 import Button from "@mui/material/Button";
-import {HOME_PAGE} from "../pages";
+import {HOME_PAGE, SIGNUP_PAGE} from "../pages";
 
 
 const LoginPage = () => {
@@ -26,6 +26,7 @@ const LoginPage = () => {
         postLogin(
             {username: data.username, password: data.password},
             (data) => {
+                console.log(data)
                 setCredentials(data.token, data.username)
                 navigate(HOME_PAGE)
             }
@@ -34,7 +35,7 @@ const LoginPage = () => {
     }
 
     return (
-        <div style={{padding: 30}}>
+        <div style={{padding: 40}}>
             <Paper>
                 <Grid
                     container
@@ -65,6 +66,9 @@ const LoginPage = () => {
                     </Grid>
                     <Grid item xs={12}>
                         <Button fullWidth onClick={handleSubmit}> Login </Button>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Link href={SIGNUP_PAGE}> Sign up </Link>
                     </Grid>
                 </Grid>
             </Paper>

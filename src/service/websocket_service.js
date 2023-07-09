@@ -11,6 +11,7 @@ export const useMessagesSocket = (onMessageAction) => useWebSocket(WEBSOCKET_HOS
     shouldReconnect: (closeEvent) => true,
     onMessage: (event) => {
         const message = JSON.parse(event.data)
+        console.log(message)
         onMessageAction(message)
     }
 });
@@ -55,7 +56,7 @@ export const NewMessageHandler = (sound) => {
     const thisUserName = getUsername()
     return (message) => {
         if (thisUserName === message.from) {
-            return
+            return message
         }
         const notificationMessage = `${message.chatName} - ${message.from}: ${message.payload}`
         showInfoMessage(notificationMessage, sound)

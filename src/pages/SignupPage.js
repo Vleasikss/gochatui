@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 
 import {postRegister} from "../service/api_service";
 import {useNavigate} from "react-router-dom";
-import {Grid, Paper, TextField} from "@mui/material";
+import {Grid, Link, Paper, TextField} from "@mui/material";
 import Button from "@mui/material/Button";
 import {LOGIN_PAGE} from "../pages";
 
@@ -55,6 +55,9 @@ const SignupPage = () => {
                     </Grid>
                     <Grid item xs={12}>
                         <Button fullWidth onClick={handleSubmit}> Sign up </Button>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Link href={LOGIN_PAGE}> Login </Link>
                     </Grid>
                 </Grid>
             </Paper>

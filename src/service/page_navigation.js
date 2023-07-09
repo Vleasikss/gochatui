@@ -1,6 +1,11 @@
+import {CHAT_PAGE} from "../pages";
+
 export const forward = (page) => {
-    window.history.replaceState(null,
+    return window.history.replaceState(null,
         "Chat",
         page
     )
+}
+export const forwardToChat = chatId => {
+    return forward(CHAT_PAGE.replace(':chatId', chatId))
 }

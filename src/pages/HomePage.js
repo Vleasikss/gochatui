@@ -31,7 +31,7 @@ import {
 } from "../service/websocket_service";
 import {CHAT_PAGE, HOME_PAGE, LOGIN_PAGE} from "../pages";
 import {Sounds} from "../sounds/sounds";
-import {forward} from "../service/page_navigation";
+import {forward, forwardToChat} from "../service/page_navigation";
 
 const useStyles = makeStyles({
     table: {
@@ -122,7 +122,7 @@ export default function Home(props) {
             setMessages(history)
         }
         setChatIdState(newChatId)
-        forward(CHAT_PAGE.replace(':chatId', newChatId))
+        forwardToChat(newChatId)
         return true
     }
 
@@ -134,7 +134,6 @@ export default function Home(props) {
                         eventType: CHAT_DELETED_EVENT_TYPE,
                         message: {chatId: chatId}
                     }
-                    console.log(JSON.stringify(payload))
                     setChatIdState(undefined)
                     forward(HOME_PAGE)
                     messagesSocket.sendMessage(JSON.stringify(payload))
